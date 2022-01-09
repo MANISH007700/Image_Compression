@@ -59,30 +59,38 @@ def load_image(path):
     image = Image.open(path)
     return np.asarray(image) 
 
-image_path = "/home/lucif3r/Desktop/Image_Compression/Image_Compression/dress.jpeg"
-image = load_image(image_path)
-# print(image) 
-# print(image.shape)
-w, h, d = image.shape
-X = image.reshape((w*h), d )
-K = 20 # desired number of color in image 
+def get_image_compressed(image_name, image_dir_path, compressed_image_path):
+    image_path = os.path.join(image_dir_path, image_name)
+    image = load_image(image_path)
+    w, h, d = image.shape
+    X = image.reshape((w*h), d )
+    K = 20 # desired number of color in image 
 
 
-colors, _ = find_K_means(X, K)
-idx = find_closed_centroid(X, colors)
+    colors, _ = find_K_means(X, K)
+    idx = find_closed_centroid(X, colors)
+
+    idx = np.array(idx, dtype = np.uint8)
+    X_reconstructed = np.array(colors[idx, :]*1, dtype = np.uint8).reshape((w,h,d))
+    compressed_image = Image.fromarray(X_reconstructed)
+
+    first, extension = image_name.split(".")[0], image_name.split(".")[-1]
+    last = "_compressed"
+
+    print(first, extension)
+    final_name = first + last + "." + extension
+    compressed_output = os.path.join(compressed_image_path, final_name )
+    compressed_image.save(compressed_output)
+    e = time.time()
+    print("Time taken: ", e-s)
 
 
-idx = np.array(idx, dtype = np.uint8)
-X_reconstructed = np.array(colors[idx, :]*1, dtype = np.uint8).reshape((w,h,d))
-print(X_reconstructed)
-print(X_reconstructed.shape)
-compressed_image = Image.fromarray(X_reconstructed)
-
-compressed_image.save("Compressed_Image_dress.jpeg")
-e = time.time()
-print("Time taken: ", e-s)
-
-
+    ### Compression ratio ### 
+    original_size = os.path.getsize(image_path) / 1024
+    compressed_size = os.path.getsize(compressed_output) / 1024 
+    print("Original Image size in kb's : ", original_size)
+    print("Compressed Image size in kb's : ", compressed_size)
+    print("Compression Ratio: ", original_size / compressed_size)
 
 
 
